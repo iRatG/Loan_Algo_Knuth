@@ -1,0 +1,19 @@
+Loan_algo_Knut/
+├── algorithms/
+│   ├── __init__.py
+│   ├── knuth_sort.py         # Алгоритмы сортировки Кнута
+│   ├── knuth_statistics.py   # Статистические алгоритмы
+│   ├── knuth_search.py       # Алгоритмы поиска
+│   └── knuth_metrics.py      # Метрики и функции потерь
+├── data/
+│   └── UCI_Credit_Card.csv   # Исходные данные
+├── visualization/
+│   ├── __init__.py
+│   └── plots.py             # Визуализация на matplotlib
+├── models/
+│   ├── __init__.py
+│   └── credit_model.py      # Модель кредитного скоринга
+├── tests/
+│   └── test_algorithms.py   # Тесты алгоритмов
+├── main.py                  # Основной скрипт
+└── README.md                # Документация
