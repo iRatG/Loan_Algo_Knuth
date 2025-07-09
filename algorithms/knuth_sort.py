@@ -6,6 +6,7 @@ The Art of Computer Programming, Volume 3: Sorting and Searching
 1. Трехпутевая быстрая сортировка (Vol 3, 5.2.2)
 2. Сортировка слиянием с оптимизацией памяти (Vol 3, 5.2.4)
 3. Сортировка подсчетом для целых чисел (Vol 3, 5.2)
+4. Оптимизированная быстрая сортировка с медианой из трёх (Vol 3, 5.2.2)
 """
 
 import numpy as np
@@ -59,19 +60,37 @@ class KnuthSort:
             
             return lt, gt
         
-        def quicksort3_recursive(arr: np.ndarray, low: int, high: int):
-            if low >= high:
-                return
+        def quicksort3_iterative(arr: np.ndarray, low: int, high: int):
+            """Итеративная версия трехпутевой быстрой сортировки"""
+            # Стек для хранения границ подмассивов
+            stack = [(low, high)]
+            
+            while stack:
+                low, high = stack.pop()
                 
-            lt, gt = partition3(arr, low, high)
-            quicksort3_recursive(arr, low, lt - 1)
-            quicksort3_recursive(arr, gt + 1, high)
+                if low >= high:
+                    continue
+                    
+                # Разделяем массив
+                lt, gt = partition3(arr, low, high)
+                
+                # Добавляем большую часть в стек первой
+                if gt - lt > high - gt:
+                    if lt - 1 > low:
+                        stack.append((low, lt - 1))
+                    if high > gt + 1:
+                        stack.append((gt + 1, high))
+                else:
+                    if high > gt + 1:
+                        stack.append((gt + 1, high))
+                    if lt - 1 > low:
+                        stack.append((low, lt - 1))
         
         if len(arr) <= 1:
             return arr
             
         arr_copy = arr.copy()
-        quicksort3_recursive(arr_copy, 0, len(arr_copy) - 1)
+        quicksort3_iterative(arr_copy, 0, len(arr_copy) - 1)
         return arr_copy
     
     @staticmethod
@@ -108,8 +127,8 @@ class KnuthSort:
             return arr
             
         mid = len(arr) // 2
-        left = self.mergesort_knuth(arr[:mid], column)
-        right = self.mergesort_knuth(arr[mid:], column)
+        left = KnuthSort.mergesort_knuth(arr[:mid], column)
+        right = KnuthSort.mergesort_knuth(arr[mid:], column)
         
         return merge(left, right)
     
@@ -160,3 +179,99 @@ class KnuthSort:
                 output[count[val]] = arr[i]
                 
         return output 
+
+    @staticmethod
+    def quicksort_optimized(arr: np.ndarray, column: Optional[int] = None) -> np.ndarray:
+        """
+        Оптимизированная быстрая сортировка Кнута с медианой из трёх (Vol 3, 5.2.2)
+        
+        Оптимизации:
+        1. Выбор опорного элемента как медианы из трёх
+        2. Вставочная сортировка для малых подмассивов
+        3. Оптимизация рекурсии для избежания переполнения стека
+        
+        Args:
+            arr: Массив для сортировки
+            column: Номер столбца для сортировки (если None, сортируем весь массив)
+            
+        Returns:
+            Отсортированный массив
+        """
+        def get_value(arr: np.ndarray, index: int) -> Union[float, int]:
+            """Получение значения с учетом столбца"""
+            return arr[index, column] if column is not None else arr[index]
+        
+        def median_of_three(low: int, high: int) -> int:
+            """Выбор медианы из трёх элементов"""
+            mid = (low + high) // 2
+            
+            a = get_value(arr_copy, low)
+            b = get_value(arr_copy, mid)
+            c = get_value(arr_copy, high)
+            
+            if a <= b <= c:
+                return mid
+            if c <= b <= a:
+                return mid
+            if b <= a <= c:
+                return low
+            if c <= a <= b:
+                return low
+            return high
+        
+        def insertion_sort(low: int, high: int):
+            """Вставочная сортировка для малых подмассивов"""
+            for i in range(low + 1, high + 1):
+                key = arr_copy[i].copy()
+                key_val = get_value(arr_copy, i)
+                j = i - 1
+                
+                while j >= low and get_value(arr_copy, j) > key_val:
+                    arr_copy[j + 1] = arr_copy[j]
+                    j -= 1
+                    
+                arr_copy[j + 1] = key
+        
+        def partition(low: int, high: int) -> int:
+            """Разделение массива с использованием медианы из трёх"""
+            pivot_idx = median_of_three(low, high)
+            pivot_val = get_value(arr_copy, pivot_idx)
+            
+            # Перемещаем опорный элемент в конец
+            arr_copy[pivot_idx], arr_copy[high] = arr_copy[high].copy(), arr_copy[pivot_idx].copy()
+            
+            i = low - 1
+            
+            for j in range(low, high):
+                if get_value(arr_copy, j) <= pivot_val:
+                    i += 1
+                    arr_copy[i], arr_copy[j] = arr_copy[j].copy(), arr_copy[i].copy()
+                    
+            arr_copy[i + 1], arr_copy[high] = arr_copy[high].copy(), arr_copy[i + 1].copy()
+            return i + 1
+        
+        def quicksort_internal(low: int, high: int):
+            """Внутренняя функция быстрой сортировки"""
+            while low < high:
+                # Используем вставочную сортировку для малых подмассивов
+                if high - low + 1 <= 10:
+                    insertion_sort(low, high)
+                    break
+                
+                # Разделяем массив
+                pivot = partition(low, high)
+                
+                # Рекурсивно сортируем меньшую часть
+                if pivot - low < high - pivot:
+                    quicksort_internal(low, pivot - 1)
+                    low = pivot + 1
+                else:
+                    quicksort_internal(pivot + 1, high)
+                    high = pivot - 1
+        
+        if len(arr) <= 1:
+            return arr
+            
+        arr_copy = arr.copy()
+        quicksort_internal(0, len(arr_copy) - 1)
+        return arr_copy 

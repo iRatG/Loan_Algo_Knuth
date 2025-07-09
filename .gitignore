@@ -36,9 +36,6 @@ ENV/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# Visualization outputs
-visualization/figures/
-
 # Local development settings
 .env.local
 .env.development.local
