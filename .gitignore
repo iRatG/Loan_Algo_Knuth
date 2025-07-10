@@ -21,11 +21,9 @@ wheels/
 *.egg
 
 # Virtual Environment
-.env
-.venv
-env/
 venv/
 ENV/
+env/
 
 # IDE
 .idea/
@@ -36,11 +34,8 @@ ENV/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# Local development settings
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Logs
+# Project specific
+visualization/figures/*
+!visualization/figures/.gitkeep
+source/*.csv
 *.log 
